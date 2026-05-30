@@ -1,0 +1,14 @@
+# Simulation generated files
+sim/*.vvp
+sim/*.vcd
+*.vcd
+
+# LibreLane full run directory
+runs/
+
+# Temporary files
+*.log
+*.tmp
+.DS_Store
+
+

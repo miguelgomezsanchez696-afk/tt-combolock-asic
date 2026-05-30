@@ -11,6 +11,15 @@ Proyecto ASIC digital estilo TinyTapeout para un candado combinacional de 4 bits
 - `docs/`: documentacion del diseno.
 - `reports/`: reportes de flujo fisico.
 - `config.json`: configuracion inicial para LibreLane.
+- `pin_order.cfg`: orden de pines top-level usado por LibreLane.
+
+## Estado actual
+
+- RTL verification con Icarus Verilog: PASS.
+- Entrada por teclado matricial 4x4 usando `uio[3:0]` como filas y `uio[7:4]` como columnas.
+- `pin_order.cfg` esta configurado en `config.json` mediante `IO_PIN_ORDER_CFG` para ubicar los pines top-level.
+- LibreLane completo el flujo fisico en `runs/RUN_2026-05-31_00-54-34`.
+- Signoff fisico: DRC Passed, LVS Passed, Antenna Passed y manufacturability Passed.
 
 ## Interfaz TinyTapeout
 
@@ -45,9 +54,35 @@ Despues de reset, la contrasena inicia en `0000`, el contador de intentos en cer
 
 ## Simulacion
 
-No se ejecuta LibreLane en esta etapa. Para una simulacion rapida con Icarus Verilog, se puede usar:
+Para reproducir la verificacion RTL con Icarus Verilog:
 
 ```sh
+mkdir -p sim
 iverilog -g2012 -o sim/tb_combolock.vvp test/tb_combolock.v src/*.v
 vvp sim/tb_combolock.vvp
 ```
+
+El resultado esperado es `PASS`.
+
+## Flujo fisico
+
+El flujo fisico se reproduce con LibreLane usando `config.json`. Este comando genera una nueva corrida bajo `runs/`; la corrida ya completada para el estado documentado es `runs/RUN_2026-05-31_00-54-34`.
+
+```sh
+PDK_ROOT=/tmp/librelane-pdks librelane config.json
+```
+
+`config.json` referencia `pin_order.cfg` mediante `IO_PIN_ORDER_CFG`, por lo que el flujo usa ese archivo para fijar la ubicacion de pines top-level.
+
+## Evidencia
+
+Los reportes resumidos y artefactos de evidencia estan en `reports/`:
+
+- `reports/rtl_simulation_pass.txt`: salida de simulacion RTL con `PASS`.
+- `reports/final_metrics.json`: metricas finales del flujo fisico.
+- `reports/lvs.netgen.rpt`: reporte LVS.
+- `reports/antenna.rpt`: reporte Antenna.
+- `reports/runtime.txt`: tiempos de ejecucion.
+- `reports/state_in.json` y `reports/state_out.json`: estados de entrada/salida del flujo.
+- `reports/librelane_artifacts_list.txt`: lista de artefactos de la corrida LibreLane.
+- `reports/config.json`: copia de configuracion usada para la corrida documentada.
