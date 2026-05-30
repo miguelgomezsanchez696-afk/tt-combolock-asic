@@ -1,0 +1,3 @@
+VCD info: dumpfile sim/tb_combolock.vcd opened for output.
+PASS
+test/tb_combolock.v:173: $finish called at 2470000 (1ps)
