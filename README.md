@@ -1,40 +1,12 @@
-# 4-bit Combination Lock ASIC with 4x4 Matrix Keypad
+# 4-bit Combination Lock ASIC with Matrix Keypad
 
-This repository contains a TinyTapeout-style digital ASIC project for a 4-bit combination lock. The design accepts one 4-bit code at a time, stores that code as the password, compares later entries against the stored password, and reports unlock or lockout status on output pins.
+This repository contains a TinyTapeout-style digital ASIC project for a 4-bit combination lock. The design lets a user enter a 4-bit value, store it as the password, compare later entries against the stored password, and report unlock or lockout status on output pins.
 
-The user input method is a typical Arduino-style 4x4 matrix keypad connected to the `uio` pins instead of DIP switches.
+The main project modification from a simple switch-driven lock is the input interface: this design uses a 4x4 matrix keypad on the bidirectional `uio` pins instead of DIP switches.
 
-## Repository Structure
+## Quick Start
 
-| Path | Purpose |
-| --- | --- |
-| `src/tt_um_combolock.v` | Top-level TinyTapeout-style Verilog module. |
-| `src/keypad_scanner.v` | Synthesizable 4x4 matrix keypad scanner. |
-| `test/tb_combolock.v` | RTL simulation testbench. |
-| `test/cocotb/` | Cocotb verification testbench for the keypad lock flow. |
-| `sim/` | Generated simulation output files. |
-| `docs/` | Course-flow, user, pinout, verification, layout, timing, and manufacturing documentation. |
-| `reports/` | Recorded RTL and physical-flow evidence. |
-| `config.json` | LibreLane configuration. |
-| `pin_order.cfg` | Explicit top-level pin placement order for LibreLane. |
-| `Makefile` | Convenience targets for simulation, physical flow, report export, and cleanup. |
-| `info.yaml` | TinyTapeout-style project metadata and pinout. |
-
-## Hardware Overview
-
-The top module is `tt_um_combolock`. It uses the standard TinyTapeout-style ports: dedicated inputs `ui_in`, dedicated outputs `uo_out`, bidirectional pins `uio`, clock `clk`, reset `rst_n`, and enable `ena`.
-
-The keypad is scanned through the `uio` pins:
-
-- `uio[3:0]` are active-low row outputs driven by the ASIC.
-- `uio[7:4]` are active-low column inputs read by the ASIC.
-- The keypad columns should be pulled up externally.
-
-Keys `0` through `9` and `A` through `D` load the current entered 4-bit code. `*` stores the current code as the password. `#` checks the current code against the stored password.
-
-## Quick Simulation
-
-Run the RTL simulation with:
+Run the Verilog RTL simulation:
 
 ```sh
 make sim
@@ -46,78 +18,110 @@ Expected result:
 PASS
 ```
 
-Run the Cocotb verification with:
+Run the Cocotb keypad verification:
 
 ```sh
+pip install -r requirements.txt
 make cocotb
 ```
 
-The Cocotb test uses the same RTL and models keypad presses by reading
-`uio_out[3:0]` row scan outputs and driving `uio_in[7:4]` column inputs.
+The physical flow has already been run locally. Do not rerun LibreLane just to review the repository; exported signoff evidence is committed under `reports/`, and the final GDS for viewer inspection is committed at [docs/gds/tt_um_combolock.gds](docs/gds/tt_um_combolock.gds).
 
-## Physical Flow Evidence
+## Repository Structure
 
-The design has completed RTL-to-GDS hardening with LibreLane. Recorded evidence is kept under `reports/` and the latest complete signoff run is:
-
-```text
-runs/RUN_2026-05-31_02-03-14
-```
-
-The newest timestamped run directory, `runs/RUN_2026-05-31_02-17-38`, is incomplete and has no `final/` directory, so it is not the signoff evidence source.
-
-The latest complete recorded flow passed:
-
-| Check | Result |
+| Path | Purpose |
 | --- | --- |
-| DRC | Passed |
-| LVS | Passed |
-| Antenna | Passed |
-| Manufacturability | Passed |
+| `src/` | Synthesizable Verilog RTL for the lock and keypad scanner. |
+| `test/tb_combolock.v` | Icarus Verilog RTL testbench. |
+| `test/cocotb/` | Cocotb verification for the keypad-driven lock flow. |
+| `Makefile` | Local targets for simulation, Cocotb, LibreLane, report export, and cleanup. |
+| `config.json` | LibreLane RTL-to-GDS configuration. |
+| `pin_order.cfg` | Explicit top-level pin ordering for physical implementation. |
+| `reports/` | Committed RTL and physical signoff evidence exported from the local run. |
+| `docs/` | Design flow, pinout, verification, layout, timing, and review documentation. |
+| `docs/images/` | Block diagram, keypad map, waveform, layout, and signoff screenshots. |
+| `docs/gds/tt_um_combolock.gds` | Final GDS file for visual inspection in a GDS viewer. |
+| `.github/workflows/test.yml` | GitHub Actions workflow for RTL and Cocotb checks. |
 
-The design uses `DIE_AREA = 0 0 161 111`, corresponding to 161 um x 111 um and 17871 um^2.
+## Pinout Summary
 
-## Documentation
+The top module is `tt_um_combolock` and uses the TinyTapeout-style interface: `ui_in`, `uo_out`, `uio_in`, `uio_out`, `uio_oe`, `clk`, `rst_n`, and `ena`.
 
-- [ASIC design flow](docs/design_flow.md)
-- [User manual](docs/user_manual.md)
-- [Pinout](docs/pinout.md)
-- [Verification](docs/verification.md)
-- [Cocotb verification](docs/cocotb_verification.md)
-- [Manufacturing readiness](docs/manufacturing_readiness.md)
-- [Synthesis and timing evidence](docs/synthesis_timing.md)
-- [Layout stages](docs/layout_stages.md)
-- [Flow summary](reports/flow_summary.md)
-- [Flow signoff summary](reports/flow_signoff_summary.txt)
+| Pin group | Direction | Use |
+| --- | --- | --- |
+| `ui_in[7:0]` | Input | Reserved and currently unused by the RTL. |
+| `uo_out[0]` | Output | `unlocked` status. |
+| `uo_out[1]` | Output | `locked_out` status after three failed checks. |
+| `uo_out[3:2]` | Output | Failed-attempt counter. |
+| `uo_out[7:4]` | Output | Stored password debug output for bring-up visibility. |
+| `uio[3:0]` | Output | Active-low keypad row scan outputs. |
+| `uio[7:4]` | Input | Active-low keypad column inputs with external pull-ups. |
+
+See [docs/pinout.md](docs/pinout.md) for the full pin table and keypad mapping.
+
+## Verification Summary
+
+| Check | Command or evidence | Expected result |
+| --- | --- | --- |
+| RTL simulation | `make sim` | `PASS` |
+| Cocotb verification | `make cocotb` | Cocotb test passes |
+| CI automation | `.github/workflows/test.yml` | Runs RTL simulation and Cocotb |
+| Physical verification | `reports/` | DRC, LVS, antenna, and manufacturability passed |
+
+The RTL testbench and Cocotb test verify reset behavior, keypad code entry, password storage with `*`, password checking with `#`, unlock behavior, failed-attempt counting, lockout after three wrong attempts, and the `uio_oe` direction mask.
+
+## Physical Signoff Summary
+
+The complete LibreLane signoff run was performed locally. Because `runs/` is intentionally ignored and not committed, local run paths are not used as GitHub evidence. The local run tag `RUN_2026-05-31_02-03-14` is recorded only for traceability.
+
+Committed evidence:
+
+| Result | Committed evidence |
+| --- | --- |
+| DRC passed | [reports/drc_violations.magic.rpt](reports/drc_violations.magic.rpt), [reports/drc_violations.klayout.json](reports/drc_violations.klayout.json) |
+| LVS passed | [reports/lvs.netgen.rpt](reports/lvs.netgen.rpt) |
+| Antenna passed | [reports/antenna.rpt](reports/antenna.rpt) |
+| Manufacturability passed | [reports/manufacturability.rpt](reports/manufacturability.rpt), [reports/flow_signoff_summary.txt](reports/flow_signoff_summary.txt) |
+| Flow metrics | [reports/final_metrics.json](reports/final_metrics.json), [reports/flow_summary.md](reports/flow_summary.md) |
+| Final GDS | [docs/gds/tt_um_combolock.gds](docs/gds/tt_um_combolock.gds) |
 
 ## Visual Evidence
 
-- [Block diagram](docs/images/block_diagram.png)
-- [Keypad mapping](docs/images/keypad_mapping.png)
-- [RTL waveform](docs/images/rtl_waveform_capture.png)
-- [KLayout layout view](docs/images/klayout_view.png)
-- [TinyTapeout GDS Viewer 3D view](docs/images/tinytapeout_3d_view.png)
-- [Signoff summary](docs/images/signoff_summary.png)
-- [Manual waveform and layout inspection commands](docs/images/README.md)
+| Evidence | Link |
+| --- | --- |
+| Block diagram | [docs/images/block_diagram.png](docs/images/block_diagram.png) |
+| Keypad mapping | [docs/images/keypad_mapping.png](docs/images/keypad_mapping.png) |
+| RTL waveform | [docs/images/rtl_waveform_capture.png](docs/images/rtl_waveform_capture.png) |
+| KLayout layout view | [docs/images/klayout_view.png](docs/images/klayout_view.png) |
+| TinyTapeout GDS Viewer 3D view | [docs/images/tinytapeout_3d_view.png](docs/images/tinytapeout_3d_view.png) |
+| Signoff summary | [docs/images/signoff_summary.png](docs/images/signoff_summary.png) |
 
 ## Course Tutorial Coverage
 
 | Course topic | Repository evidence |
 | --- | --- |
-| Verilog tutorial | `src/tt_um_combolock.v`, `src/keypad_scanner.v`, `docs/design_flow.md` |
-| Makefile tutorial | `Makefile` with `sim`, `flow`, `reports`, and `clean` targets |
-| Cocotb tutorial | `test/cocotb/test_combolock.py`, `test/cocotb/Makefile`, `docs/cocotb_verification.md` |
-| TCL tutorial | LibreLane/OpenROAD commands are recorded in `runs/RUN_2026-05-31_02-03-14/*/COMMANDS` |
-| FPGA synthesis tutorial | Project is ASIC-focused; synthesis evidence is Yosys/LibreLane in `docs/synthesis_timing.md` |
-| Standard cell simulation | Gate-level netlist and SDF files are in `runs/RUN_2026-05-31_02-03-14/final/` |
-| Yosys tutorial | `runs/RUN_2026-05-31_02-03-14/06-yosys-synthesis/` |
-| OpenSTA | `docs/synthesis_timing.md` and `runs/RUN_2026-05-31_02-03-14/56-openroad-stapostpnr/` |
-| LibreLane | `config.json`, `reports/flow_summary.md`, `reports/flow.log` |
-| Floorplanning | `docs/layout_stages.md` |
-| Placement | `docs/layout_stages.md` |
-| CTS | `docs/layout_stages.md` |
-| Routing | `docs/layout_stages.md` |
-| DRC/LVS | `reports/drc_violations.magic.rpt`, `reports/drc_violations.klayout.json`, `reports/lvs.netgen.rpt` |
+| Verilog | `src/tt_um_combolock.v`, `src/keypad_scanner.v` |
+| Makefile | `Makefile` targets for `sim`, `cocotb`, `flow`, `reports`, and `clean` |
+| Cocotb | `test/cocotb/test_combolock.py`, `test/cocotb/Makefile` |
+| TCL | LibreLane/OpenROAD command history exported in [reports/COMMANDS](reports/COMMANDS) |
+| Yosys | Synthesis and metrics evidence in [docs/synthesis_timing.md](docs/synthesis_timing.md) and `reports/` |
+| OpenSTA | Timing discussion in [docs/synthesis_timing.md](docs/synthesis_timing.md) |
+| LibreLane | [config.json](config.json), [reports/flow_summary.md](reports/flow_summary.md) |
+| Floorplanning | [docs/design_flow.md](docs/design_flow.md), [docs/layout_stages.md](docs/layout_stages.md) |
+| Placement | [docs/design_flow.md](docs/design_flow.md), [docs/layout_stages.md](docs/layout_stages.md) |
+| CTS | [docs/design_flow.md](docs/design_flow.md), [docs/layout_stages.md](docs/layout_stages.md) |
+| Routing | [docs/design_flow.md](docs/design_flow.md), [docs/layout_stages.md](docs/layout_stages.md) |
+| DRC/LVS | [reports/drc_violations.magic.rpt](reports/drc_violations.magic.rpt), [reports/drc_violations.klayout.json](reports/drc_violations.klayout.json), [reports/lvs.netgen.rpt](reports/lvs.netgen.rpt) |
 
-## GitHub Actions
+## Documentation
 
-GitHub Actions is configured in `.github/workflows/test.yml`. On push, pull request, or manual dispatch, it installs Icarus Verilog and runs `make sim`.
+- [Project review checklist](docs/project_review_checklist.md)
+- [ASIC design flow](docs/design_flow.md)
+- [Verification](docs/verification.md)
+- [Cocotb verification](docs/cocotb_verification.md)
+- [Pinout](docs/pinout.md)
+- [User manual](docs/user_manual.md)
+- [Layout stages](docs/layout_stages.md)
+- [Synthesis and timing](docs/synthesis_timing.md)
+- [Manufacturing readiness](docs/manufacturing_readiness.md)
+- [Final GDS viewer notes](docs/gds/README.md)

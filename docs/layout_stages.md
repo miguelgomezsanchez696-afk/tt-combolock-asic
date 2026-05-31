@@ -1,12 +1,8 @@
 # Layout Stages
 
-This document records the physical layout stages from the completed LibreLane run:
+This document summarizes the physical layout stages from the completed local LibreLane signoff run. The `runs/` directory is ignored and not committed, so review evidence is the exported content in `reports/`, visual screenshots in `docs/images/`, and the final GDS in `docs/gds/tt_um_combolock.gds`.
 
-```text
-runs/RUN_2026-05-31_02-03-14
-```
-
-The newest timestamped run, `RUN_2026-05-31_02-17-38`, is incomplete and does not contain final layout output. The complete evidence is from `RUN_2026-05-31_02-03-14` and the exported files in `reports/`.
+The local run tag is `RUN_2026-05-31_02-03-14`, recorded only for traceability.
 
 ## Floorplan
 
@@ -21,38 +17,24 @@ Floorplanning is controlled by `config.json`.
 | Core bbox from metrics | `5.52 10.88 155.48 97.92` |
 | Pin order | `pin_order.cfg` through `IO_PIN_ORDER_CFG` |
 
-Evidence:
-
-```text
-runs/RUN_2026-05-31_02-03-14/13-openroad-floorplan/
-```
-
 This stage creates the initial DEF/ODB layout, applies the die/core area, creates placement rows, and prepares the design for power grid generation and placement.
 
 ## Power Grid and IO Placement
 
 Power connections, tap/endcap insertion, PDN generation, and explicit IO placement happen before main placement.
 
-| Step | Directory |
+| Step | Evidence summary |
 | --- | --- |
-| Power connections | `16-odb-setpowerconnections` |
-| Tap/endcap insertion | `19-openroad-tapendcapinsertion` |
-| PDN generation | `21-openroad-generatepdn` |
-| Custom IO placement | `26-odb-customioplacement` |
+| Power connections | LibreLane/OpenROAD flow log in [../reports/flow.log](../reports/flow.log) |
+| Tap/endcap insertion | LibreLane/OpenROAD flow log in [../reports/flow.log](../reports/flow.log) |
+| PDN generation | LibreLane/OpenROAD flow log in [../reports/flow.log](../reports/flow.log) |
+| Custom IO placement | `pin_order.cfg` and LibreLane/OpenROAD flow log in [../reports/flow.log](../reports/flow.log) |
 
 `pin_order.cfg` fixes top-level pins on the north, west, east, and south sides of the macro.
 
 ## Placement
 
-Placement is performed by OpenROAD:
-
-| Step | Directory |
-| --- | --- |
-| Global placement | `28-openroad-globalplacement` |
-| Detailed placement | `34-openroad-detailedplacement` |
-| Post-placement timing repair | `32-openroad-repairdesignpostgpl` |
-
-Final metrics:
+Placement is performed by OpenROAD. Final exported metrics report:
 
 | Metric | Value |
 | --- | ---: |
@@ -62,25 +44,24 @@ Final metrics:
 | Total instance area | 13052.5 um^2 |
 | Instance utilization | 0.145514 |
 
+Committed evidence:
+
+- [../reports/final_metrics.json](../reports/final_metrics.json)
+- [../reports/flow_summary.md](../reports/flow_summary.md)
+- [../reports/flow.log](../reports/flow.log)
+
 ## CTS
 
-Clock tree synthesis is performed in:
+Clock tree synthesis is performed by OpenROAD for the `clk` domain. The final metrics report 4 clock buffer instances. Timing is checked after CTS and again after routing.
 
-```text
-runs/RUN_2026-05-31_02-03-14/35-openroad-cts/
-```
+Committed evidence:
 
-The final metrics report 4 clock buffer instances. Timing is checked after CTS in the mid-PNR STA stages.
+- [../reports/final_metrics.json](../reports/final_metrics.json)
+- [synthesis_timing.md](synthesis_timing.md)
 
 ## Routing
 
-Routing is performed in:
-
-| Step | Directory |
-| --- | --- |
-| Global routing | `39-openroad-globalrouting` |
-| Antenna checking and repair | `40-openroad-checkantennas`, `43-openroad-repairantennas`, `47-openroad-checkantennas-1` |
-| Detailed routing | `45-openroad-detailedrouting` |
+LibreLane performs global routing, antenna checking and repair, and detailed routing before signoff.
 
 Final routing metrics:
 
@@ -92,60 +73,43 @@ Final routing metrics:
 | Antenna violating nets | 0 |
 | Antenna violating pins | 0 |
 
+Committed evidence:
+
+- [../reports/final_metrics.json](../reports/final_metrics.json)
+- [../reports/antenna.rpt](../reports/antenna.rpt)
+- [../reports/flow_signoff_summary.txt](../reports/flow_signoff_summary.txt)
+
 ## Extraction and Final STA
 
-After routing, LibreLane runs fill insertion, parasitic extraction, and post-route timing analysis.
+After routing, LibreLane runs fill insertion, parasitic extraction, and post-route timing analysis. The final post-route STA summary shows 0 setup violations and 0 hold violations.
 
-| Step | Directory |
-| --- | --- |
-| Fill insertion | `53-openroad-fillinsertion` |
-| RC extraction | `55-openroad-rcx` |
-| Post-route STA | `56-openroad-stapostpnr` |
+Committed timing and metrics evidence:
 
-The final post-route STA summary shows 0 setup violations and 0 hold violations.
+- [synthesis_timing.md](synthesis_timing.md)
+- [../reports/final_metrics.json](../reports/final_metrics.json)
+- [../reports/flow_signoff_summary.txt](../reports/flow_signoff_summary.txt)
 
 ## Streamout and Signoff Layout Files
 
-Final layout files are saved under:
+The final GDS exported from the local run is committed for viewer inspection:
 
-```text
-runs/RUN_2026-05-31_02-03-14/final/
-```
+- [gds/tt_um_combolock.gds](gds/tt_um_combolock.gds)
 
-Important files:
-
-| File | Purpose |
-| --- | --- |
-| `final/gds/tt_um_combolock.gds` | Final GDS layout. |
-| `final/klayout_gds/tt_um_combolock.klayout.gds` | KLayout streamout GDS. |
-| `final/def/tt_um_combolock.def` | Final DEF. |
-| `final/odb/tt_um_combolock.odb` | Final OpenDB database. |
-| `final/lef/tt_um_combolock.lef` | LEF abstract. |
-| `final/nl/tt_um_combolock.nl.v` | Final gate-level netlist. |
-| `final/spef/` | Extracted parasitics by corner. |
-| `final/sdf/` | SDF timing files by corner. |
+The broader local final output included GDS, DEF, ODB, LEF, gate-level netlist, parasitics, and timing files. Those heavy local run directories are not committed; the review-facing evidence is the exported `reports/` set and the committed final GDS.
 
 ## Opening the Final Layout
 
-If KLayout is installed:
+If KLayout is installed, open the committed GDS:
 
 ```sh
-klayout runs/RUN_2026-05-31_02-03-14/final/gds/tt_um_combolock.gds
+klayout docs/gds/tt_um_combolock.gds
 ```
 
-If OpenROAD is installed:
-
-```sh
-openroad
-read_db runs/RUN_2026-05-31_02-03-14/final/odb/tt_um_combolock.odb
-gui::show
-```
-
-`docs/images/klayout_view.png` is a real KLayout screenshot of the final layout. `docs/images/tinytapeout_3d_view.png` is a real TinyTapeout GDS Viewer 3D screenshot of the final layout.
+The same GDS can be opened in the TinyTapeout GDS Viewer. See [gds/README.md](gds/README.md) for viewer instructions.
 
 ## Visual Evidence
 
 - [KLayout layout view](images/klayout_view.png)
 - [TinyTapeout GDS Viewer 3D view](images/tinytapeout_3d_view.png)
 - [Signoff summary](images/signoff_summary.png)
-- [Manual layout inspection commands](images/README.md)
+- [Manual layout inspection notes](images/README.md)

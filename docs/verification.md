@@ -1,10 +1,10 @@
 # Verification
 
-This project has three verification levels recorded in the repository:
+This project has three verification layers:
 
 - RTL simulation with Icarus Verilog.
-- Cocotb simulation with Icarus Verilog.
-- Physical verification from the completed LibreLane flow.
+- Cocotb verification with an active keypad model.
+- Physical verification evidence exported from a completed local LibreLane run.
 
 ## RTL Simulation
 
@@ -17,25 +17,31 @@ make sim
 Equivalent raw commands:
 
 ```sh
+mkdir -p sim
 iverilog -g2012 -o sim/tb_combolock.vvp test/tb_combolock.v src/*.v
 vvp sim/tb_combolock.vvp
 ```
 
-Expected output:
+Expected result:
 
 ```text
 PASS
 ```
 
-The testbench verifies reset behavior, keypad code entry, password storage with `*`, password checking with `#`, the `unlocked` output, failed-attempt counting, lockout after three wrong attempts, and the fixed `uio_oe` direction mask.
+The Verilog testbench verifies reset behavior, keypad code entry, password storage with `*`, password checking with `#`, correct-password unlock, failed-attempt counting, lockout after three wrong attempts, and `uio_oe = 8'b0000_1111`.
 
-Visual evidence:
+Committed RTL evidence:
 
-- [RTL waveform](images/rtl_waveform_capture.png)
-- [Signoff summary](images/signoff_summary.png)
-- [Manual waveform inspection commands](images/README.md)
+- [reports/rtl_simulation_pass.txt](../reports/rtl_simulation_pass.txt)
+- [docs/images/rtl_waveform_capture.png](images/rtl_waveform_capture.png)
 
-## Cocotb Simulation
+## Cocotb Verification
+
+Install the local Python dependency if needed:
+
+```sh
+pip install -r requirements.txt
+```
 
 Run:
 
@@ -43,98 +49,57 @@ Run:
 make cocotb
 ```
 
-If Cocotb is not installed in the active Python environment, install:
+Expected result:
 
-```sh
-pip install -r requirements.txt
+```text
+TESTS=1 PASS=1 FAIL=0
 ```
 
-The Cocotb test lives in `test/cocotb/test_combolock.py`. It compiles the unchanged RTL and models a 4x4 matrix keypad by reading `uio_out[3:0]` row scan outputs and driving active-low column inputs on `uio_in[7:4]`.
+The Cocotb test lives in `test/cocotb/test_combolock.py`. It compiles the unchanged RTL and models a 4x4 matrix keypad by reading active-low row scan outputs on `uio_out[3:0]` and driving active-low column inputs on `uio_in[7:4]`.
 
-The Cocotb flow verifies reset behavior, `uio_oe == 8'b0000_1111`, entered-code updates, password storage with `*`, password checking with `#`, correct-password unlock, failed-attempt counting, and lockout after three wrong attempts. The entered-code assertion is white-box because `entered_code` is internal state rather than a top-level output.
+The Cocotb flow verifies reset behavior, the `uio_oe` direction mask, keypad entry, password storage, correct-password unlock, wrong-password attempts, and final lockout. The entered-code check is white-box because `entered_code` is internal state rather than a top-level output.
 
-See [Cocotb verification](cocotb_verification.md) for the focused run instructions.
+See [cocotb_verification.md](cocotb_verification.md) for focused Cocotb notes.
 
 ## GitHub Actions
 
-GitHub Actions is configured in `.github/workflows/test.yml`. The workflow runs on push, pull request, and manual dispatch. It installs Icarus Verilog and runs:
+GitHub Actions is configured in [../.github/workflows/test.yml](../.github/workflows/test.yml). The workflow runs on push, pull request, and manual dispatch. It installs Icarus Verilog, runs `make sim`, installs `requirements.txt`, and runs `make cocotb`.
 
-```sh
-make sim
-```
+LibreLane is intentionally not run in CI because it requires a full PDK and a heavier physical-design environment than the lightweight RTL checks.
 
-This covers the course automation and CI evidence for the RTL simulation flow.
+## Physical Verification
 
-## LibreLane Flow
+The complete signoff run was performed locally with LibreLane. The `runs/` directory is ignored and not committed, so review evidence is exported into committed files under [../reports/](../reports/). The local run tag `RUN_2026-05-31_02-03-14` is retained only for traceability.
 
-The design was hardened with LibreLane using `config.json`. To reproduce the flow locally:
+| Check | Meaning | Committed evidence |
+| --- | --- | --- |
+| DRC | Design Rule Check confirms that layout geometry and spacing satisfy process rules. | [Magic DRC](../reports/drc_violations.magic.rpt), [KLayout DRC](../reports/drc_violations.klayout.json) |
+| LVS | Layout Versus Schematic confirms that the extracted layout netlist matches the synthesized design netlist. | [Netgen LVS](../reports/lvs.netgen.rpt) |
+| Antenna | Checks for long conductors that could collect fabrication charge and damage transistor gates. | [Antenna report](../reports/antenna.rpt) |
+| Manufacturability | Final flow-level readiness summary that combines required physical checks. | [Manufacturability report](../reports/manufacturability.rpt), [Signoff summary](../reports/flow_signoff_summary.txt) |
 
-```sh
-make flow
-```
-
-Equivalent raw command:
-
-```sh
-librelane config.json
-```
-
-If a PDK permission issue occurs because the default PDK directory is not writable, use:
-
-```sh
-export PDK_ROOT=/tmp/librelane-pdks
-librelane config.json
-```
-
-The recorded flow evidence is already included under `reports/`. The physical flow does not need to be rerun for documentation review.
-
-## OpenSTA and Timing
-
-OpenROAD/OpenSTA timing reports are generated inside the LibreLane run directories. The completed run stores post-route STA at:
-
-```text
-runs/RUN_2026-05-31_02-03-14/56-openroad-stapostpnr/
-```
-
-The post-route summary reports 0 setup violations and 0 hold violations. See `docs/synthesis_timing.md` for synthesis and timing details.
-
-## Physical Verification Checks
-
-| Check | Meaning |
-| --- | --- |
-| DRC | Design Rule Check. Confirms that the layout follows process geometry and spacing rules. |
-| LVS | Layout Versus Schematic. Confirms that the extracted layout netlist matches the synthesized design netlist. |
-| Antenna check | Looks for long metal structures that could collect charge during fabrication and damage transistor gates. |
-| Manufacturability | Final flow-level summary that the generated layout has passed required physical checks for fabrication readiness. |
-
-## Latest Recorded Local Results
-
-The latest complete recorded local flow passed:
+## Latest Recorded Results
 
 | Check | Result |
 | --- | --- |
+| RTL simulation | Passed |
+| Cocotb verification | Passed when `make cocotb` completes with `PASS=1` |
 | DRC | Passed |
 | LVS | Passed |
 | Antenna | Passed |
 | Manufacturability | Passed |
 
-Key evidence files:
+Additional report links:
 
-- `reports/flow_summary.md`
-- `reports/flow_signoff_summary.txt`
-- `reports/rtl_simulation_pass.txt`
-- `reports/drc_violations.magic.rpt`
-- `reports/drc_violations.klayout.json`
-- `reports/lvs.netgen.rpt`
-- `reports/antenna.rpt`
-- `reports/manufacturability.rpt`
+- [reports/flow_summary.md](../reports/flow_summary.md)
+- [reports/final_metrics.json](../reports/final_metrics.json)
+- [reports/flow.log](../reports/flow.log)
 
-Visual evidence:
+Visual verification evidence:
 
 - [Block diagram](images/block_diagram.png)
 - [Keypad mapping](images/keypad_mapping.png)
+- [RTL waveform](images/rtl_waveform_capture.png)
+- [KLayout layout view](images/klayout_view.png)
+- [TinyTapeout GDS Viewer 3D view](images/tinytapeout_3d_view.png)
 - [Signoff summary](images/signoff_summary.png)
-
-## Run Directory Note
-
-The newest timestamped run directory is `runs/RUN_2026-05-31_02-17-38`, but it is incomplete and stops before final signoff output. The latest complete signoff run is `runs/RUN_2026-05-31_02-03-14`.

@@ -2,6 +2,8 @@
 
 This project has completed a local RTL-to-GDS hardening flow with LibreLane. The recorded run shows that the design passed the physical checks needed for final presentation.
 
+The `runs/` directory is ignored and not committed. The local run tag `RUN_2026-05-31_02-03-14` is recorded only for traceability; review evidence is committed under `reports/`, and the final GDS is committed under `docs/gds/tt_um_combolock.gds`.
+
 ## Hardened Design
 
 The top-level design is `tt_um_combolock`. LibreLane was run with `config.json`, which references the synthesizable Verilog sources:
@@ -54,20 +56,24 @@ These results indicate that the generated layout is consistent with the design n
 
 ## Evidence
 
-The `reports/` directory contains the evidence for the recorded run:
+The `reports/` directory contains the committed evidence for the recorded run:
 
-- `reports/flow_summary.md`
-- `reports/flow_signoff_summary.txt`
-- `reports/final_metrics.json`
-- `reports/flow.log`
-- `reports/drc_violations.magic.rpt`
-- `reports/drc_violations.klayout.json`
-- `reports/lvs.netgen.rpt`
-- `reports/antenna.rpt`
-- `reports/manufacturability.rpt`
+- [../reports/flow_summary.md](../reports/flow_summary.md)
+- [../reports/flow_signoff_summary.txt](../reports/flow_signoff_summary.txt)
+- [../reports/final_metrics.json](../reports/final_metrics.json)
+- [../reports/flow.log](../reports/flow.log)
+- [../reports/drc_violations.magic.rpt](../reports/drc_violations.magic.rpt)
+- [../reports/drc_violations.klayout.json](../reports/drc_violations.klayout.json)
+- [../reports/lvs.netgen.rpt](../reports/lvs.netgen.rpt)
+- [../reports/antenna.rpt](../reports/antenna.rpt)
+- [../reports/manufacturability.rpt](../reports/manufacturability.rpt)
 
 The recorded flow summary reports 0 route DRC errors, 0 Magic DRC errors, 0 KLayout DRC errors, 0 LVS errors, and 0 antenna violating nets.
 
-## Latest Run Note
+## GDS Viewer File
 
-The newest timestamped run directory is `runs/RUN_2026-05-31_02-17-38`, but it does not contain a `final/` directory and stops before final signoff. The complete manufacturing evidence is from `runs/RUN_2026-05-31_02-03-14` and the exported `reports/` files.
+The final GDS for visual inspection is committed at:
+
+- [gds/tt_um_combolock.gds](gds/tt_um_combolock.gds)
+
+Viewer instructions are in [gds/README.md](gds/README.md).

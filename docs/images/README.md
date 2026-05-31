@@ -2,26 +2,26 @@
 
 The PNG files in this directory are documentation evidence for the ASIC project.
 
-Generated automatically:
+Generated documentation images:
 
 - `block_diagram.png`
 - `keypad_mapping.png`
 - `signoff_summary.png`
 
-Real screenshots:
+Captured tool screenshots:
 
-- `rtl_waveform_capture.png` is a real GTKWave waveform screenshot from the RTL simulation VCD.
-- `klayout_view.png` is a real KLayout screenshot of the final layout.
-- `tinytapeout_3d_view.png` is a real TinyTapeout GDS Viewer 3D screenshot of the final layout.
+- `rtl_waveform_capture.png` is a GTKWave waveform screenshot from the RTL simulation VCD.
+- `klayout_view.png` is a KLayout screenshot of the final layout.
+- `tinytapeout_3d_view.png` is a TinyTapeout GDS Viewer 3D screenshot of the final layout.
 
-To inspect the waveform manually:
+To regenerate the simulation waveform locally:
 
 ```sh
 make sim
 gtkwave sim/tb_combolock.vcd
 ```
 
-Recommended signals:
+Recommended waveform signals:
 
 - `clk`
 - `rst_n`
@@ -37,16 +37,10 @@ Recommended signals:
 - `tb_combolock.dut.locked_out`
 - `tb_combolock.dut.attempts`
 
-To inspect the actual final layout manually with KLayout:
+To inspect the committed final layout manually, open:
 
 ```sh
-klayout runs/RUN_2026-05-31_02-03-14/final/gds/tt_um_combolock.gds
+klayout docs/gds/tt_um_combolock.gds
 ```
 
-To inspect it manually with OpenROAD:
-
-```sh
-openroad
-read_db runs/RUN_2026-05-31_02-03-14/final/odb/tt_um_combolock.odb
-gui::show
-```
+The complete signoff run was local. Extracted evidence is committed under `reports/`, and the final GDS viewer file is committed under `docs/gds/tt_um_combolock.gds`.

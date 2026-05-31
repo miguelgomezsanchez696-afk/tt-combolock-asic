@@ -1,35 +1,62 @@
 # ASIC Design Flow
 
-This project follows the course ASIC flow from RTL design through physical verification. The implemented design is a 4-bit combination lock with a 4x4 matrix keypad interface.
+This project follows the course digital ASIC flow from Verilog RTL through final physical verification. The design is a 4-bit combination lock whose main interface change is a 4x4 matrix keypad on `uio` pins instead of DIP switches.
 
-## 1. RTL Design
+## Course Flow Mapping
 
-The synthesizable Verilog is in `src/`:
+| Course topic | Project implementation |
+| --- | --- |
+| Verilog | Synthesizable RTL in `src/tt_um_combolock.v` and `src/keypad_scanner.v`. |
+| Makefile | Top-level `Makefile` provides `sim`, `cocotb`, `flow`, `reports`, and `clean` targets. |
+| Cocotb | `test/cocotb/test_combolock.py` verifies the keypad-driven lock behavior. |
+| Yosys | LibreLane uses Yosys for synthesis from the Verilog sources listed in `config.json`. |
+| OpenSTA | LibreLane/OpenROAD performs timing analysis; timing evidence is summarized in `docs/synthesis_timing.md`. |
+| LibreLane | `config.json` defines the RTL-to-GDS flow for `tt_um_combolock`. |
+| Floorplanning | Die area, core area, and pin ordering are configured through `config.json` and `pin_order.cfg`. |
+| Placement | LibreLane/OpenROAD places standard cells after synthesis and floorplanning. |
+| CTS | OpenROAD builds the clock tree for the `clk` domain. |
+| Routing | LibreLane performs global and detailed routing before final signoff. |
+| DRC/LVS | Magic, KLayout, and Netgen reports are exported under `reports/`. |
+
+## 1. Verilog RTL
+
+The synthesizable RTL is in `src/`:
 
 | File | Purpose |
 | --- | --- |
 | `src/tt_um_combolock.v` | Top-level TinyTapeout-style user module and lock state machine. |
 | `src/keypad_scanner.v` | 4x4 active-low matrix keypad scanner. |
 
-The top module is `tt_um_combolock`. It uses `clk`, active-low reset `rst_n`, enable `ena`, dedicated inputs `ui_in`, dedicated outputs `uo_out`, and bidirectional `uio` signals. The RTL maps the keypad to `uio[3:0]` row outputs and `uio[7:4]` column inputs.
+The top module uses `clk`, active-low reset `rst_n`, enable `ena`, dedicated inputs `ui_in`, dedicated outputs `uo_out`, and bidirectional `uio` signals. The keypad rows are driven on `uio[3:0]`; keypad columns are read on `uio[7:4]`.
 
-## 2. RTL Verification
+## 2. Makefile and RTL Simulation
 
-RTL simulation is performed with Icarus Verilog using `test/tb_combolock.v`.
+The top-level `Makefile` wraps the Verilog simulator command:
 
 ```sh
 make sim
 ```
 
-The expected result is:
+Expected result:
 
 ```text
 PASS
 ```
 
-The testbench verifies reset behavior, keypad scanning, password setting with `*`, password checking with `#`, unlock behavior, failed-attempt counting, lockout after three failed attempts, and `uio_oe = 8'b0000_1111`.
+The RTL testbench verifies reset behavior, keypad scanning, password setting with `*`, password checking with `#`, unlock behavior, failed-attempt counting, lockout after three failed attempts, and `uio_oe = 8'b0000_1111`.
 
-## 3. Synthesis
+## 3. Cocotb Verification
+
+Cocotb is run with:
+
+```sh
+pip install -r requirements.txt
+make cocotb
+```
+
+The Cocotb test compiles the same RTL and drives a behavioral keypad model by observing row scan outputs and driving column inputs. This covers the course Cocotb workflow while keeping the RTL source unchanged.
+
+## 4. Yosys Synthesis
 
 LibreLane runs Yosys synthesis using `config.json`.
 
@@ -40,126 +67,102 @@ LibreLane runs Yosys synthesis using `config.json`.
 | `CLOCK_PORT` | `clk` |
 | `CLOCK_PERIOD` | `25` ns |
 
-Synthesis evidence is available in:
+Synthesis and timing notes are summarized in [synthesis_timing.md](synthesis_timing.md). Exported flow metrics are committed under [../reports/](../reports/).
 
-```text
-runs/RUN_2026-05-31_02-03-14/06-yosys-synthesis/
+## 5. OpenSTA Timing
+
+LibreLane/OpenROAD runs static timing analysis after implementation stages. The recorded signoff summary reports no setup violations and no hold violations. See:
+
+- [synthesis_timing.md](synthesis_timing.md)
+- [../reports/flow_signoff_summary.txt](../reports/flow_signoff_summary.txt)
+- [../reports/final_metrics.json](../reports/final_metrics.json)
+
+## 6. LibreLane RTL-to-GDS Flow
+
+The local physical implementation command is:
+
+```sh
+make flow
 ```
 
-The Yosys reports show 0 synthesis check errors, no inferred latches, no unmapped cells, and a mapped standard-cell netlist.
+This expands to:
 
-## 4. Floorplanning
+```sh
+librelane config.json
+```
 
-The physical configuration uses absolute sizing:
+The complete signoff run was performed locally. The `runs/` directory is intentionally ignored and not committed, so GitHub review should use committed artifacts under `reports/` and the final GDS under `docs/gds/`. The local run tag `RUN_2026-05-31_02-03-14` is recorded only for traceability.
+
+## 7. Floorplanning
+
+The physical configuration uses an explicit die area:
 
 ```json
 "DIE_AREA": "0 0 161 111"
 ```
 
-This gives a 161 um x 111 um die area. The core area reported by LibreLane is `5.52 10.88 155.48 97.92`.
-
-Top-level pin placement is fixed by:
+This gives a 161 um x 111 um die area. Pin placement is controlled by:
 
 ```json
 "IO_PIN_ORDER_CFG": "dir::pin_order.cfg"
 ```
 
-The floorplan stage is recorded at:
+The pin order file keeps the TinyTapeout-style interface and keypad pins explicit for review.
 
-```text
-runs/RUN_2026-05-31_02-03-14/13-openroad-floorplan/
-```
+## 8. Placement
 
-## 5. Placement
+LibreLane/OpenROAD performs global placement, IO placement from `pin_order.cfg`, detailed placement, and placement-stage timing repair. Final exported metrics report 384 standard-cell instances and 1474 total instances including filler, tap, antenna, and repair cells.
 
-LibreLane performs global placement, custom IO placement from `pin_order.cfg`, detailed placement, and timing repair.
+Relevant committed evidence:
 
-| Stage | Directory |
+- [../reports/final_metrics.json](../reports/final_metrics.json)
+- [layout_stages.md](layout_stages.md)
+
+## 9. CTS
+
+Clock Tree Synthesis is performed by OpenROAD for the `clk` domain. Final exported metrics report 4 clock buffer instances. Timing closure is summarized in:
+
+- [synthesis_timing.md](synthesis_timing.md)
+- [../reports/flow_signoff_summary.txt](../reports/flow_signoff_summary.txt)
+
+## 10. Routing
+
+LibreLane performs global routing and detailed routing before final signoff. The final metrics report route DRC convergence to 0 route DRC errors, final route wirelength of 3201 um, and 1007 vias.
+
+Routing and layout-stage notes are summarized in [layout_stages.md](layout_stages.md).
+
+## 11. DRC and LVS
+
+Final DRC is checked with Magic and KLayout. LVS is checked with Netgen after layout extraction.
+
+| Check | Committed evidence |
 | --- | --- |
-| IO/custom pin placement | `26-odb-customioplacement` |
-| Global placement | `28-openroad-globalplacement` |
-| Detailed placement | `34-openroad-detailedplacement` |
+| Magic DRC | [../reports/drc_violations.magic.rpt](../reports/drc_violations.magic.rpt) |
+| KLayout DRC | [../reports/drc_violations.klayout.json](../reports/drc_violations.klayout.json) |
+| Netgen LVS | [../reports/lvs.netgen.rpt](../reports/lvs.netgen.rpt) |
 
-The final metrics report 384 standard-cell instances and 1474 total instances including filler, tap, antenna, and repair cells.
+The recorded flow summary reports 0 Magic DRC errors, 0 KLayout DRC errors, and 0 LVS errors.
 
-## 6. Clock Tree Synthesis
+## 12. Antenna and Manufacturability
 
-CTS is performed by OpenROAD in:
-
-```text
-runs/RUN_2026-05-31_02-03-14/35-openroad-cts/
-```
-
-The final metrics report 4 clock buffer instances. Post-CTS and post-route STA are recorded in later OpenROAD STA stages.
-
-## 7. Routing
-
-Routing is performed in two main steps:
-
-| Routing step | Directory |
-| --- | --- |
-| Global routing | `39-openroad-globalrouting` |
-| Detailed routing | `45-openroad-detailedrouting` |
-
-The final metrics show route DRC convergence to 0 route DRC errors and final route wirelength of 3201 um with 1007 vias.
-
-## 8. DRC
-
-Final DRC is checked with Magic and KLayout.
-
-| Check | Evidence |
-| --- | --- |
-| Magic DRC | `reports/drc_violations.magic.rpt` |
-| KLayout DRC | `reports/drc_violations.klayout.json` |
-
-The recorded flow summary reports 0 Magic DRC errors and 0 KLayout DRC errors.
-
-## 9. LVS
-
-LVS is run with Netgen after Magic extraction.
-
-Evidence:
-
-```text
-reports/lvs.netgen.rpt
-runs/RUN_2026-05-31_02-03-14/70-netgen-lvs/reports/lvs.netgen.rpt
-```
-
-The recorded flow summary reports 0 LVS errors.
-
-## 10. Antenna
-
-Antenna checks and repair are included in the route/signoff flow. The configuration enables heuristic diode insertion:
+Antenna checking and repair are included in the routing and signoff flow. The configuration enables heuristic diode insertion:
 
 ```json
 "RUN_HEURISTIC_DIODE_INSERTION": true
 ```
 
-Evidence:
+Committed evidence:
 
-```text
-reports/antenna.rpt
-```
+- [../reports/antenna.rpt](../reports/antenna.rpt)
+- [../reports/manufacturability.rpt](../reports/manufacturability.rpt)
+- [../reports/flow_signoff_summary.txt](../reports/flow_signoff_summary.txt)
 
-The recorded flow summary reports 0 antenna violating nets.
+The manufacturability report records antenna, LVS, and DRC as passed.
 
-## 11. Manufacturability
+## 13. Final GDS
 
-LibreLane generated the final manufacturability report:
+The final GDS is committed for visual inspection:
 
-```text
-reports/manufacturability.rpt
-runs/RUN_2026-05-31_02-03-14/76-misc-reportmanufacturability/manufacturability.rpt
-```
+- [gds/tt_um_combolock.gds](gds/tt_um_combolock.gds)
 
-The report records:
-
-| Check | Result |
-| --- | --- |
-| Antenna | Passed |
-| LVS | Passed |
-| DRC | Passed |
-
-## Run Note
-
-The newest timestamped run directory in this repository is `runs/RUN_2026-05-31_02-17-38`, but that run stops at `32-openroad-repairdesignpostgpl` and does not contain a `final/` directory. The latest complete signoff evidence is therefore the completed `runs/RUN_2026-05-31_02-03-14` run and the exported `reports/` files.
+Viewer instructions are in [gds/README.md](gds/README.md).

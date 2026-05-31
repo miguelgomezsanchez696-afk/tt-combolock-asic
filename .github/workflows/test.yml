@@ -1,4 +1,4 @@
-name: RTL Simulation
+name: RTL and Cocotb Verification
 
 on:
   push:
@@ -6,12 +6,17 @@ on:
   workflow_dispatch:
 
 jobs:
-  sim:
+  test:
     runs-on: ubuntu-latest
 
     steps:
       - name: Check out repository
         uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.x"
 
       - name: Install Icarus Verilog
         run: |
@@ -20,3 +25,9 @@ jobs:
 
       - name: Run RTL simulation
         run: make sim
+
+      - name: Install Python requirements
+        run: python -m pip install -r requirements.txt
+
+      - name: Run Cocotb verification
+        run: make cocotb
