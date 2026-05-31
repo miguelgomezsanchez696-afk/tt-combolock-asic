@@ -11,7 +11,7 @@ import matplotlib
 
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
-from matplotlib.patches import FancyArrowPatch, Rectangle
+from matplotlib.patches import FancyArrowPatch, FancyBboxPatch, Rectangle
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -23,6 +23,13 @@ DEF = ROOT / "runs" / "RUN_2026-05-31_02-03-14" / "final" / "def" / "tt_um_combo
 def save(fig, name: str) -> None:
     IMG.mkdir(parents=True, exist_ok=True)
     fig.savefig(IMG / name, dpi=180, bbox_inches="tight", facecolor="white")
+    plt.close(fig)
+
+
+def save_diagram(fig, stem: str, dpi: int) -> None:
+    IMG.mkdir(parents=True, exist_ok=True)
+    fig.savefig(IMG / f"{stem}.png", dpi=dpi, facecolor="white")
+    fig.savefig(IMG / f"{stem}.svg", facecolor="white")
     plt.close(fig)
 
 
@@ -42,59 +49,174 @@ def arrow(ax, start, end, label="", rad=0.0):
         ax.text((start[0] + end[0]) / 2, (start[1] + end[1]) / 2 + 0.22, label, ha="center", fontsize=9, color="#263238")
 
 
+def rounded_box(ax, xy, wh, title, body="", fc="#f7fbff", ec="#2f5f8f", title_size=16, body_size=11):
+    rect = FancyBboxPatch(
+        xy,
+        wh[0],
+        wh[1],
+        boxstyle="round,pad=0.03,rounding_size=0.16",
+        linewidth=2.0,
+        edgecolor=ec,
+        facecolor=fc,
+    )
+    ax.add_patch(rect)
+    title_y = xy[1] + wh[1] * (0.62 if body else 0.50)
+    ax.text(
+        xy[0] + wh[0] / 2,
+        title_y,
+        title,
+        ha="center",
+        va="center",
+        fontsize=title_size,
+        weight="bold",
+        color="#1f2933",
+        linespacing=1.12,
+    )
+    if body:
+        ax.text(
+            xy[0] + wh[0] / 2,
+            xy[1] + wh[1] * 0.30,
+            body,
+            ha="center",
+            va="center",
+            fontsize=body_size,
+            color="#334e68",
+            linespacing=1.25,
+        )
+    return rect
+
+
+def diagram_arrow(ax, start, end, label="", label_xy=None, color="#334e68", rad=0.0, lw=2.0, label_size=10):
+    arr = FancyArrowPatch(
+        start,
+        end,
+        arrowstyle="-|>",
+        mutation_scale=18,
+        linewidth=lw,
+        color=color,
+        connectionstyle=f"arc3,rad={rad}",
+        shrinkA=4,
+        shrinkB=4,
+    )
+    ax.add_patch(arr)
+    if label:
+        x, y = label_xy if label_xy else ((start[0] + end[0]) / 2, (start[1] + end[1]) / 2 + 0.25)
+        ax.text(
+            x,
+            y,
+            label,
+            ha="center",
+            va="center",
+            fontsize=label_size,
+            color="#243b53",
+            bbox=dict(boxstyle="round,pad=0.22,rounding_size=0.08", facecolor="white", edgecolor="#d9e2ec", linewidth=0.8),
+            linespacing=1.15,
+        )
+
+
 def block_diagram() -> None:
-    fig, ax = plt.subplots(figsize=(12, 6.5))
-    ax.set_xlim(0, 12)
-    ax.set_ylim(0, 7)
+    fig, ax = plt.subplots(figsize=(16, 9))
+    fig.subplots_adjust(left=0, right=1, bottom=0, top=1)
+    ax.set_xlim(0, 16)
+    ax.set_ylim(0, 9)
     ax.axis("off")
-    ax.set_title("tt_um_combolock ASIC Block Diagram", fontsize=18, weight="bold", pad=16)
+    ax.set_facecolor("white")
 
-    box(ax, (0.5, 2.35), (2.0, 2.0), "4x4 Matrix\nKeypad", "Rows 0-3\nCols 0-3", "#fff8e1", "#c28f00")
-    box(ax, (3.25, 0.85), (5.5, 5.25), "TinyTapeout-style top module\n tt_um_combolock", "", "#f7fbff", "#1f5f99")
-    box(ax, (3.75, 3.75), (2.0, 1.2), "keypad_scanner", "scan rows\nread columns", "#e8f5e9", "#2e7d32")
-    box(ax, (6.15, 3.75), (2.0, 1.2), "Lock FSM /\nRegisters", "password\nattempts\nlockout", "#f3e5f5", "#6a1b9a")
-    box(ax, (6.15, 2.05), (2.0, 1.0), "Output Pack", "{password,\nattempts,status}", "#ede7f6", "#512da8")
-    box(ax, (9.5, 2.35), (2.0, 2.0), "uo_out[7:0]", "unlocked\nlocked_out\nattempts\npassword", "#e0f2f1", "#00695c")
+    ax.text(
+        8,
+        8.32,
+        "4-bit Combination Lock ASIC with 4x4 Matrix Keypad",
+        ha="center",
+        va="center",
+        fontsize=26,
+        weight="bold",
+        color="#102a43",
+    )
 
-    arrow(ax, (2.5, 3.65), (3.75, 4.35), "uio[3:0] rows")
-    arrow(ax, (3.75, 4.05), (2.5, 3.0), "uio[7:4] cols")
-    arrow(ax, (5.75, 4.35), (6.15, 4.35), "key_valid/code")
-    arrow(ax, (7.15, 3.75), (7.15, 3.05), "state")
-    arrow(ax, (8.15, 2.55), (9.5, 3.35), "status")
-    ax.text(5.98, 1.3, "clk, rst_n, ena", ha="center", fontsize=10, color="#37474f")
-    save(fig, "block_diagram.png")
+    rounded_box(ax, (0.7, 3.05), (2.7, 2.35), "4x4 Matrix\nKeypad", "Rows 0-3\nColumns 0-3", "#fff7e6", "#b7791f")
+    rounded_box(ax, (4.35, 2.55), (2.95, 3.30), "TinyTapeout-style\nI/O Interface", "Bidirectional uio bus\nStatus output bus", "#e6f6ff", "#1864ab")
+    rounded_box(ax, (8.10, 4.70), (2.75, 1.55), "Keypad\nScanner", "Drive rows\nsample columns", "#e6fcf5", "#0b7285", title_size=15)
+    rounded_box(ax, (11.55, 4.70), (3.10, 1.55), "Combination\nLock Logic", "Password, attempt,\nand lockout state", "#f3f0ff", "#6741d9", title_size=15)
+    rounded_box(ax, (11.55, 2.15), (3.10, 1.35), "Output Status\nRegister", "Packed status fields", "#edf2ff", "#3b5bdb", title_size=15)
+
+    diagram_arrow(ax, (4.35, 3.65), (3.40, 3.65), "Keypad rows\nuio_out[3:0]", (3.85, 3.05), "#b7791f")
+    diagram_arrow(ax, (3.40, 4.78), (4.35, 4.78), "Keypad columns\nuio_in[7:4]", (3.88, 5.42), "#1864ab")
+    diagram_arrow(ax, (7.30, 5.15), (8.10, 5.35), "row drive\ncolumn sample", (7.70, 5.92), "#0b7285", label_size=9)
+    diagram_arrow(ax, (10.85, 5.48), (11.55, 5.48), "key_valid, key_code\nkey_star, key_hash", (11.20, 6.35), "#6741d9")
+    diagram_arrow(ax, (13.10, 4.70), (13.10, 3.50), "status fields", (13.85, 4.10), "#3b5bdb", label_size=9)
+    diagram_arrow(ax, (14.65, 2.82), (15.65, 2.82), "uo_out[7:0]\nstatus outputs", (15.00, 3.62), "#0f766e")
+
+    ax.plot([5.85, 8.10], [4.30, 4.95], color="#bcccdc", linewidth=1.2, linestyle="--")
+    ax.plot([6.00, 8.10], [3.75, 4.95], color="#bcccdc", linewidth=1.2, linestyle="--")
+    ax.text(5.82, 2.08, "clk  rst_n  ena", ha="center", va="center", fontsize=11, color="#52616b")
+    save_diagram(fig, "block_diagram", dpi=120)
 
 
 def keypad_mapping() -> None:
     keys = [["1", "2", "3", "A"], ["4", "5", "6", "B"], ["7", "8", "9", "C"], ["*", "0", "#", "D"]]
-    fig, ax = plt.subplots(figsize=(9.5, 7.2))
-    ax.set_xlim(0, 8)
-    ax.set_ylim(0, 7)
+    fig, ax = plt.subplots(figsize=(14, 10))
+    fig.subplots_adjust(left=0, right=1, bottom=0, top=1)
+    ax.set_xlim(0, 14)
+    ax.set_ylim(0, 10)
     ax.axis("off")
-    ax.set_title("4x4 Keypad Mapping and uio Connections", fontsize=18, weight="bold", pad=14)
+    ax.set_facecolor("white")
+    ax.text(7, 9.25, "4x4 Keypad Mapping and ASIC I/O Connections", ha="center", va="center", fontsize=25, weight="bold", color="#102a43")
 
-    x0, y0, cell = 1.3, 2.0, 1.0
+    x0, y0, cell, gap = 1.25, 1.65, 1.45, 0.20
+    grid_w = 4 * cell + 3 * gap
+    grid_h = 4 * cell + 3 * gap
+    ax.add_patch(
+        FancyBboxPatch(
+            (x0 - 0.28, y0 - 0.28),
+            grid_w + 0.56,
+            grid_h + 0.56,
+            boxstyle="round,pad=0.04,rounding_size=0.14",
+            linewidth=1.8,
+            edgecolor="#d9e2ec",
+            facecolor="#f8fafc",
+        )
+    )
     for r in range(4):
-        ax.text(0.5, y0 + (3 - r) * cell + 0.5, f"Row {r}\nuio[{r}]", ha="center", va="center", fontsize=10, color="#1b5e20")
+        y = y0 + (3 - r) * (cell + gap)
+        ax.text(0.55, y + cell / 2, f"Row {r}", ha="center", va="center", fontsize=12, weight="bold", color="#5f3dc4")
         for c in range(4):
-            x = x0 + c * cell
-            y = y0 + (3 - r) * cell
-            fc = "#fffde7"
+            x = x0 + c * (cell + gap)
+            fc = "#ffffff"
+            ec = "#486581"
             if keys[r][c] == "*":
-                fc = "#e3f2fd"
+                fc = "#e6fcf5"
+                ec = "#0b7285"
             elif keys[r][c] == "#":
-                fc = "#fce4ec"
-            ax.add_patch(Rectangle((x, y), cell * 0.86, cell * 0.86, edgecolor="#455a64", facecolor=fc, linewidth=1.6))
-            ax.text(x + cell * 0.43, y + cell * 0.43, keys[r][c], ha="center", va="center", fontsize=20, weight="bold")
+                fc = "#fff4e6"
+                ec = "#d9480f"
+            ax.add_patch(
+                FancyBboxPatch(
+                    (x, y),
+                    cell,
+                    cell,
+                    boxstyle="round,pad=0.02,rounding_size=0.12",
+                    edgecolor=ec,
+                    facecolor=fc,
+                    linewidth=2.0,
+                )
+            )
+            ax.text(x + cell / 2, y + cell / 2, keys[r][c], ha="center", va="center", fontsize=30, weight="bold", color="#102a43")
     for c in range(4):
-        ax.text(x0 + c * cell + 0.43, 1.4, f"Col {c}\nuio[{c+4}]", ha="center", va="center", fontsize=10, color="#0d47a1")
+        ax.text(x0 + c * (cell + gap) + cell / 2, 1.03, f"Col {c}", ha="center", va="center", fontsize=12, weight="bold", color="#1864ab")
 
-    ax.text(5.75, 5.4, "ASIC directions", fontsize=13, weight="bold", ha="center")
-    box(ax, (4.85, 4.25), (1.8, 0.75), "uio[3:0]", "row outputs\nactive low", "#e8f5e9", "#2e7d32")
-    box(ax, (4.85, 3.1), (1.8, 0.75), "uio[7:4]", "column inputs\nactive low", "#e3f2fd", "#1565c0")
-    box(ax, (4.85, 1.9), (1.8, 0.75), "*", "set password", "#e3f2fd", "#1565c0")
-    box(ax, (4.85, 0.8), (1.8, 0.75), "#", "check password", "#fce4ec", "#ad1457")
-    save(fig, "keypad_mapping.png")
+    diagram_arrow(ax, (0.95, 7.95), (0.95, 1.35), "uio_out[3:0]\nrow scan outputs\nfrom ASIC", (2.40, 8.05), "#5f3dc4", rad=0.0)
+    diagram_arrow(ax, (1.40, 0.78), (7.55, 0.78), "uio_in[7:4] = column inputs to ASIC", (4.45, 0.36), "#1864ab", rad=0.0)
+
+    legend_x = 8.35
+    ax.text(legend_x, 7.95, "Key Functions", ha="left", va="center", fontsize=18, weight="bold", color="#102a43")
+    rounded_box(ax, (legend_x, 6.80), (4.75, 0.72), "* = store password", "", "#e6fcf5", "#0b7285", title_size=14)
+    rounded_box(ax, (legend_x, 5.82), (4.75, 0.72), "# = check password", "", "#fff4e6", "#d9480f", title_size=14)
+    rounded_box(ax, (legend_x, 4.84), (4.75, 0.72), "0-9, A-D = 4-bit code input", "", "#f8fafc", "#486581", title_size=14)
+
+    ax.text(legend_x, 3.62, "Electrical Direction", ha="left", va="center", fontsize=18, weight="bold", color="#102a43")
+    rounded_box(ax, (legend_x, 2.48), (4.75, 0.76), "ASIC drives one row at a time", "", "#f3f0ff", "#5f3dc4", title_size=14)
+    rounded_box(ax, (legend_x, 1.48), (4.75, 0.76), "ASIC reads the four column lines", "", "#e6f6ff", "#1864ab", title_size=14)
+    save_diagram(fig, "keypad_mapping", dpi=140)
 
 
 def signoff_summary() -> None:
