@@ -3,7 +3,7 @@ project:
   title: "4-bit Combination Lock with 4x4 Matrix Keypad"
   author: "MiguelGomez"
   discord: ""
-  description: "A 4-bit combination lock controlled by a standard 4x4 matrix keypad."
+  description: "A 4-bit combination lock controlled by a standard Arduino-style 4x4 matrix keypad instead of DIP switches."
   language: "Verilog"
   clock_hz: 40000000
   tiles: "1x1"
