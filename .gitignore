@@ -9,6 +9,7 @@ runs/
 
 # Temporary files
 *.log
+!reports/*.log
 *.tmp
 .DS_Store
 
