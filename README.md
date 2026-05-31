@@ -64,7 +64,7 @@ See [docs/pinout.md](docs/pinout.md) for the full pin table and keypad mapping.
 | Check | Command or evidence | Expected result |
 | --- | --- | --- |
 | RTL simulation | `make sim` | `PASS` |
-| Cocotb verification | `make cocotb` | Cocotb test passes |
+| Cocotb verification | `make cocotb` | Cocotb keypad test passes |
 | CI automation | `.github/workflows/test.yml` | Runs RTL simulation and Cocotb |
 | Physical verification | `reports/` | DRC, LVS, antenna, and manufacturability passed |
 
@@ -73,6 +73,12 @@ The RTL testbench and Cocotb test verify reset behavior, keypad code entry, pass
 ## Physical Signoff Summary
 
 The complete LibreLane signoff run was performed locally. Because `runs/` is intentionally ignored and not committed, local run paths are not used as GitHub evidence. The local run tag `RUN_2026-05-31_02-03-14` is recorded only for traceability.
+
+Review-facing physical evidence is split into committed extracted reports and committed viewer artifacts:
+
+- Extracted signoff evidence is stored in [reports/](reports/).
+- The final GDS is stored in [docs/gds/tt_um_combolock.gds](docs/gds/tt_um_combolock.gds).
+- Visual evidence is stored in [docs/images/](docs/images/).
 
 Committed evidence:
 
@@ -116,11 +122,11 @@ Committed evidence:
 ## Documentation
 
 - [Project review checklist](docs/project_review_checklist.md)
+- [User manual](docs/user_manual.md)
+- [Pinout](docs/pinout.md)
 - [ASIC design flow](docs/design_flow.md)
 - [Verification](docs/verification.md)
 - [Cocotb verification](docs/cocotb_verification.md)
-- [Pinout](docs/pinout.md)
-- [User manual](docs/user_manual.md)
 - [Layout stages](docs/layout_stages.md)
 - [Synthesis and timing](docs/synthesis_timing.md)
 - [Manufacturing readiness](docs/manufacturing_readiness.md)

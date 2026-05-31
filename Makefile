@@ -3,17 +3,21 @@ RUN_DIR ?= $(shell find runs -maxdepth 1 -type d -name 'RUN_*' | sort | tail -n 
 
 .PHONY: sim cocotb flow reports clean
 
+# RTL simulation with Icarus Verilog.
 sim:
 	mkdir -p sim
 	iverilog -g2012 -o $(SIM_VVP) test/tb_combolock.v src/*.v
 	vvp $(SIM_VVP)
 
+# Cocotb keypad verification.
 cocotb:
 	make -C test/cocotb
 
+# Local LibreLane hardening. Do not run this for documentation-only review.
 flow:
 	librelane config.json
 
+# Export selected evidence from the latest local LibreLane run into reports/.
 reports:
 	@test -n "$(RUN_DIR)" || (echo "No LibreLane run found under runs/"; exit 1)
 	@echo "Latest run: $(RUN_DIR)"
@@ -26,5 +30,6 @@ reports:
 	@cp $(RUN_DIR)/76-misc-reportmanufacturability/manufacturability.rpt reports/manufacturability.rpt
 	@cp $(RUN_DIR)/flow.log reports/flow.log
 
+# Remove generated simulation artifacts only.
 clean:
 	$(RM) sim/tb_combolock.vvp sim/tb_combolock.vcd

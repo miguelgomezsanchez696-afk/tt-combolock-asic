@@ -16,17 +16,27 @@ make sim
 
 Expected output is `PASS`.
 
+Run the Cocotb keypad verification, if the Python requirements are installed:
+
+```sh
+make cocotb
+```
+
+The GitHub Actions workflow in `.github/workflows/test.yml` runs both `make sim` and `make cocotb`.
+
 The physical flow was reproduced locally with LibreLane using:
 
 ```sh
 make flow
 ```
 
-If the local environment needs an explicit PDK location, run:
+The complete LibreLane run was local and is not rerun for repository review. The `runs/` directory is ignored, so it is not used as GitHub evidence. Extracted signoff evidence is committed under `reports/`, visual evidence is committed under `docs/images/`, and the final GDS is committed at `docs/gds/tt_um_combolock.gds`.
 
-```sh
-export PDK_ROOT=/tmp/librelane-pdks
-librelane config.json
-```
+The recorded local flow passed DRC, LVS, antenna, and manufacturability checks. The main review entry points are:
 
-The recorded local flow passed DRC, LVS, antenna, and manufacturability checks. Evidence is kept in `reports/`, especially `reports/flow_summary.md` and `reports/flow_signoff_summary.txt`.
+- `README.md`
+- `docs/project_review_checklist.md`
+- `docs/user_manual.md`
+- `docs/pinout.md`
+- `reports/flow_summary.md`
+- `reports/flow_signoff_summary.txt`

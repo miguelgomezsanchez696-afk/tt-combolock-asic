@@ -17,6 +17,9 @@ Use this checklist for a final repository review against the course Digital ASIC
 | Manufacturability | Passed | [../reports/manufacturability.rpt](../reports/manufacturability.rpt), [../reports/flow_signoff_summary.txt](../reports/flow_signoff_summary.txt) |
 | Visual evidence | Complete | [images/block_diagram.png](images/block_diagram.png), [images/keypad_mapping.png](images/keypad_mapping.png), [images/rtl_waveform_capture.png](images/rtl_waveform_capture.png), [images/klayout_view.png](images/klayout_view.png), [images/tinytapeout_3d_view.png](images/tinytapeout_3d_view.png), [images/signoff_summary.png](images/signoff_summary.png) |
 | GDS viewer file | Complete | [gds/tt_um_combolock.gds](gds/tt_um_combolock.gds) |
+| User manual and pinout | Complete | [user_manual.md](user_manual.md), [pinout.md](pinout.md) |
+| Course coverage documentation | Complete | [design_flow.md](design_flow.md), [../README.md](../README.md#course-tutorial-coverage) |
+| Project review checklist | Complete | This file |
 | GitHub Actions | Complete | [../.github/workflows/test.yml](../.github/workflows/test.yml) runs RTL simulation and Cocotb verification |
 
 ## Review Notes
