@@ -1,0 +1,44 @@
+# Tiny Tapeout project information
+project:
+  title: "4-bit Combination Lock with 4x4 Matrix Keypad"
+  author: "MiguelGomez"
+  discord: ""
+  description: "A 4-bit combination lock controlled by a standard 4x4 matrix keypad."
+  language: "Verilog"
+  clock_hz: 40000000
+  tiles: "1x1"
+  top_module: "tt_um_combolock"
+  source_files:
+    - "tt_um_combolock.v"
+    - "keypad_scanner.v"
+  pinout:
+    # Inputs
+    ui[0]: ""
+    ui[1]: ""
+    ui[2]: ""
+    ui[3]: ""
+    ui[4]: ""
+    ui[5]: ""
+    ui[6]: ""
+    ui[7]: ""
+    # Outputs
+    uo[0]: "unlocked"
+    uo[1]: "locked_out"
+    uo[2]: "failed_attempts[0]"
+    uo[3]: "failed_attempts[1]"
+    uo[4]: "debug_password[0]"
+    uo[5]: "debug_password[1]"
+    uo[6]: "debug_password[2]"
+    uo[7]: "debug_password[3]"
+    # Bidirectional pins
+    uio[0]: "keypad_row[0]"
+    uio[1]: "keypad_row[1]"
+    uio[2]: "keypad_row[2]"
+    uio[3]: "keypad_row[3]"
+    uio[4]: "keypad_col[0]"
+    uio[5]: "keypad_col[1]"
+    uio[6]: "keypad_col[2]"
+    uio[7]: "keypad_col[3]"
+
+# Do not change!
+yaml_version: 6

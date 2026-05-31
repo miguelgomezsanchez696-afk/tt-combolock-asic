@@ -60,18 +60,38 @@ Despues de 3 intentos fallidos se activa `locked_out`; a partir de ese momento s
 Para reproducir la simulacion RTL con Icarus Verilog:
 
 ```sh
+make sim
+```
+
+Comandos equivalentes:
+
+```sh
 iverilog -g2012 -o sim/tb_combolock.vvp test/tb_combolock.v src/*.v
 vvp sim/tb_combolock.vvp
 ```
 
 Resultado de simulacion: PASS.
 
+GitHub Actions ejecuta esta misma verificacion con `make sim` en `.github/workflows/test.yml`. El workflow no ejecuta LibreLane/GDS por ahora porque requiere un entorno y PDK pesado; el flujo fisico se reproduce localmente con `make flow` o `PDK_ROOT=/tmp/librelane-pdks make flow`.
+
 ## Flujo fisico
 
 El flujo fisico se reproduce con LibreLane usando `config.json`. Este comando genera una nueva corrida bajo `runs/`; no es necesario volver a ejecutarlo para revisar la entrega documentada.
 
 ```sh
+make flow
+```
+
+Comando equivalente:
+
+```sh
 librelane config.json
+```
+
+Si LibreLane necesita una ruta explicita para el PDK:
+
+```sh
+PDK_ROOT=/tmp/librelane-pdks make flow
 ```
 
 Resultado fisico documentado:
@@ -104,7 +124,7 @@ librelane config.json
 Si LibreLane no puede escribir el PDK en la ruta por defecto, usar:
 
 ```sh
-PDK_ROOT=/tmp/librelane-pdks librelane config.json
+PDK_ROOT=/tmp/librelane-pdks make flow
 ```
 
 La corrida de verificacion fisica documentada es `runs/RUN_2026-05-31_02-03-14`. El flujo termino con DRC Passed, LVS Passed, Antenna Passed y manufacturability Passed. El tamano definido por `DIE_AREA` es `0 0 161 111`, equivalente a un bbox de 161 um x 111 um y un area de 17871 um^2, razonable para este macro digital pequeno estilo TinyTapeout.
@@ -129,3 +149,10 @@ La evidencia de simulacion y flujo fisico esta en `reports/`. Esta carpeta conti
 - `reports/state_in.json` y `reports/state_out.json`: estados de entrada/salida del flujo.
 - `reports/librelane_artifacts_list.txt`: lista de artefactos de la corrida LibreLane.
 - `reports/config.json`: copia de configuracion usada para la corrida documentada.
+
+## Archivos estilo TinyTapeout
+
+- `info.yaml`: metadatos del proyecto, modulo top, fuentes, clock y pinout para revision estilo TinyTapeout.
+- `docs/info.md`: descripcion corta para datasheet/documentacion.
+- `.github/workflows/test.yml`: CI simple que instala Icarus Verilog y ejecuta `make sim`.
+- `.gitignore`: ignora `runs/` para no subir corridas completas de LibreLane.
