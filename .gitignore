@@ -2,6 +2,8 @@
 # Simulation generated files
 sim/*.vvp
 sim/*.vcd
+test/cocotb/results.xml
+test/cocotb/sim_build/
 *.vcd
 
 # LibreLane full run directory

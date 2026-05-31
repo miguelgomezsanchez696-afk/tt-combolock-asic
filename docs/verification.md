@@ -1,8 +1,9 @@
 # Verification
 
-This project has two verification levels recorded in the repository:
+This project has three verification levels recorded in the repository:
 
 - RTL simulation with Icarus Verilog.
+- Cocotb simulation with Icarus Verilog.
 - Physical verification from the completed LibreLane flow.
 
 ## RTL Simulation
@@ -34,9 +35,25 @@ Visual evidence:
 - [Signoff summary](images/signoff_summary.png)
 - [Manual waveform inspection commands](images/README.md)
 
-## Cocotb Status
+## Cocotb Simulation
 
-This project currently uses a plain Verilog testbench with Icarus Verilog. Cocotb is not configured in this repository. If the course requires cocotb specifically, it can be added as future work without changing the RTL behavior.
+Run:
+
+```sh
+make cocotb
+```
+
+If Cocotb is not installed in the active Python environment, install:
+
+```sh
+pip install -r requirements.txt
+```
+
+The Cocotb test lives in `test/cocotb/test_combolock.py`. It compiles the unchanged RTL and models a 4x4 matrix keypad by reading `uio_out[3:0]` row scan outputs and driving active-low column inputs on `uio_in[7:4]`.
+
+The Cocotb flow verifies reset behavior, `uio_oe == 8'b0000_1111`, entered-code updates, password storage with `*`, password checking with `#`, correct-password unlock, failed-attempt counting, and lockout after three wrong attempts. The entered-code assertion is white-box because `entered_code` is internal state rather than a top-level output.
+
+See [Cocotb verification](cocotb_verification.md) for the focused run instructions.
 
 ## GitHub Actions
 

@@ -1,12 +1,15 @@
 SIM_VVP := sim/tb_combolock.vvp
 RUN_DIR ?= $(shell find runs -maxdepth 1 -type d -name 'RUN_*' | sort | tail -n 1)
 
-.PHONY: sim flow reports clean
+.PHONY: sim cocotb flow reports clean
 
 sim:
 	mkdir -p sim
 	iverilog -g2012 -o $(SIM_VVP) test/tb_combolock.v src/*.v
 	vvp $(SIM_VVP)
+
+cocotb:
+	make -C test/cocotb
 
 flow:
 	librelane config.json

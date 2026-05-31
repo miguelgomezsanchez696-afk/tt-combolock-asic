@@ -11,6 +11,7 @@ The user input method is a typical Arduino-style 4x4 matrix keypad connected to 
 | `src/tt_um_combolock.v` | Top-level TinyTapeout-style Verilog module. |
 | `src/keypad_scanner.v` | Synthesizable 4x4 matrix keypad scanner. |
 | `test/tb_combolock.v` | RTL simulation testbench. |
+| `test/cocotb/` | Cocotb verification testbench for the keypad lock flow. |
 | `sim/` | Generated simulation output files. |
 | `docs/` | Course-flow, user, pinout, verification, layout, timing, and manufacturing documentation. |
 | `reports/` | Recorded RTL and physical-flow evidence. |
@@ -45,6 +46,15 @@ Expected result:
 PASS
 ```
 
+Run the Cocotb verification with:
+
+```sh
+make cocotb
+```
+
+The Cocotb test uses the same RTL and models keypad presses by reading
+`uio_out[3:0]` row scan outputs and driving `uio_in[7:4]` column inputs.
+
 ## Physical Flow Evidence
 
 The design has completed RTL-to-GDS hardening with LibreLane. Recorded evidence is kept under `reports/` and the latest complete signoff run is:
@@ -72,6 +82,7 @@ The design uses `DIE_AREA = 0 0 161 111`, corresponding to 161 um x 111 um and 1
 - [User manual](docs/user_manual.md)
 - [Pinout](docs/pinout.md)
 - [Verification](docs/verification.md)
+- [Cocotb verification](docs/cocotb_verification.md)
 - [Manufacturing readiness](docs/manufacturing_readiness.md)
 - [Synthesis and timing evidence](docs/synthesis_timing.md)
 - [Layout stages](docs/layout_stages.md)
@@ -93,7 +104,7 @@ The design uses `DIE_AREA = 0 0 161 111`, corresponding to 161 um x 111 um and 1
 | --- | --- |
 | Verilog tutorial | `src/tt_um_combolock.v`, `src/keypad_scanner.v`, `docs/design_flow.md` |
 | Makefile tutorial | `Makefile` with `sim`, `flow`, `reports`, and `clean` targets |
-| Cocotb tutorial | Not currently configured; see `docs/verification.md` for the future-work note |
+| Cocotb tutorial | `test/cocotb/test_combolock.py`, `test/cocotb/Makefile`, `docs/cocotb_verification.md` |
 | TCL tutorial | LibreLane/OpenROAD commands are recorded in `runs/RUN_2026-05-31_02-03-14/*/COMMANDS` |
 | FPGA synthesis tutorial | Project is ASIC-focused; synthesis evidence is Yosys/LibreLane in `docs/synthesis_timing.md` |
 | Standard cell simulation | Gate-level netlist and SDF files are in `runs/RUN_2026-05-31_02-03-14/final/` |
