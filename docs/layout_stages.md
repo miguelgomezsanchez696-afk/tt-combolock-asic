@@ -141,10 +141,11 @@ read_db runs/RUN_2026-05-31_02-03-14/final/odb/tt_um_combolock.odb
 gui::show
 ```
 
-`docs/images/final_layout.png` is a DEF-derived overview. For a full GUI screenshot of the final GDS, use the KLayout or OpenROAD commands above.
+`docs/images/klayout_view.png` is a real KLayout screenshot of the final layout. `docs/images/tinytapeout_3d_view.png` is a real TinyTapeout GDS Viewer 3D screenshot of the final layout.
 
 ## Visual Evidence
 
-- [Final layout overview](images/final_layout.png)
+- [KLayout layout view](images/klayout_view.png)
+- [TinyTapeout GDS Viewer 3D view](images/tinytapeout_3d_view.png)
 - [Signoff summary](images/signoff_summary.png)
 - [Manual layout inspection commands](images/README.md)

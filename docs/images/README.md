@@ -1,16 +1,20 @@
 # Visual Evidence Images
 
-The PNG files in this directory are generated documentation evidence for the ASIC project.
+The PNG files in this directory are documentation evidence for the ASIC project.
 
 Generated automatically:
 
 - `block_diagram.png`
 - `keypad_mapping.png`
-- `rtl_waveform.png`
-- `final_layout.png`
 - `signoff_summary.png`
 
-`rtl_waveform.png` is generated from `sim/tb_combolock.vcd`. To inspect the waveform manually:
+Real screenshots:
+
+- `rtl_waveform_capture.png` is a real GTKWave waveform screenshot from the RTL simulation VCD.
+- `klayout_view.png` is a real KLayout screenshot of the final layout.
+- `tinytapeout_3d_view.png` is a real TinyTapeout GDS Viewer 3D screenshot of the final layout.
+
+To inspect the waveform manually:
 
 ```sh
 make sim
@@ -32,12 +36,6 @@ Recommended signals:
 - `tb_combolock.dut.unlocked`
 - `tb_combolock.dut.locked_out`
 - `tb_combolock.dut.attempts`
-
-`final_layout.png` is a DEF-derived overview from:
-
-```text
-runs/RUN_2026-05-31_02-03-14/final/def/tt_um_combolock.def
-```
 
 To inspect the actual final layout manually with KLayout:
 

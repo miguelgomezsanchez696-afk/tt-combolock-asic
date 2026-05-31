@@ -93,8 +93,9 @@ The design uses `DIE_AREA = 0 0 161 111`, corresponding to 161 um x 111 um and 1
 
 - [Block diagram](docs/images/block_diagram.png)
 - [Keypad mapping](docs/images/keypad_mapping.png)
-- [RTL waveform](docs/images/rtl_waveform.png)
-- [Final layout overview](docs/images/final_layout.png)
+- [RTL waveform](docs/images/rtl_waveform_capture.png)
+- [KLayout layout view](docs/images/klayout_view.png)
+- [TinyTapeout GDS Viewer 3D view](docs/images/tinytapeout_3d_view.png)
 - [Signoff summary](docs/images/signoff_summary.png)
 - [Manual waveform and layout inspection commands](docs/images/README.md)
 

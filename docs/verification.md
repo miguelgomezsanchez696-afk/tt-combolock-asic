@@ -31,7 +31,7 @@ The testbench verifies reset behavior, keypad code entry, password storage with 
 
 Visual evidence:
 
-- [RTL waveform](images/rtl_waveform.png)
+- [RTL waveform](images/rtl_waveform_capture.png)
 - [Signoff summary](images/signoff_summary.png)
 - [Manual waveform inspection commands](images/README.md)
 
