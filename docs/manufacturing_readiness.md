@@ -67,3 +67,7 @@ The `reports/` directory contains the evidence for the recorded run:
 - `reports/manufacturability.rpt`
 
 The recorded flow summary reports 0 route DRC errors, 0 Magic DRC errors, 0 KLayout DRC errors, 0 LVS errors, and 0 antenna violating nets.
+
+## Latest Run Note
+
+The newest timestamped run directory is `runs/RUN_2026-05-31_02-17-38`, but it does not contain a `final/` directory and stops before final signoff. The complete manufacturing evidence is from `runs/RUN_2026-05-31_02-03-14` and the exported `reports/` files.
